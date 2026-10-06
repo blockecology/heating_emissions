@@ -32,6 +32,33 @@ draw_flag_fig <- function(variable) {
   
   x <- gemeinde[[variable]]
   
+  # Labels
+  if (variable == "emissions_per_capita") {
+    var_label <- "Residential heating emissions per person"
+    var_units <- "Tonnes of carbon dioxide per year"
+  } 
+  
+  if (variable == "emissions") {
+    var_label <- "Residential heating emissions"
+    var_units <- "Thousand tonnes of carbon dioxide per year"
+    x <- x / 1e3
+  } 
+  
+  if (variable == "avg_residence_area") {
+    var_label <- "Average residence area"
+    var_units <- "Square meters"
+  } 
+  
+  if (variable == "avg_ef") {
+    var_label <- "Average emission factor"
+    var_units <- "kg of carbon dioxide per kWh"
+  } 
+  
+  if (variable == "avg_consumption") {
+    var_label <- "Average heat consumption rate"
+    var_units <- "kWh per square meter"
+  } 
+  
   bottom <- quantile(x, 1/3, na.rm = TRUE)
   top    <- quantile(x, 2/3, na.rm = TRUE)
   
@@ -61,12 +88,12 @@ draw_flag_fig <- function(variable) {
        mar = c(0, 0, 3, 0))
   
   text(x = e$xmin, y = e$ymax * 1.009,
-       labels = "Residential heating emissions per person",
+       labels = var_label,
        adj = c(0, 0), cex = 1.6, font = 2, xpd = NA)
   
   text(x = e$xmin, y = e$ymax * 1.0035,
        labels = "Top, mid, and bottom thirds of all German municipalities",
-       adj = c(0, 0), cex = 1.2, color = "gray", xpd = NA)
+       adj = c(0, 0), cex = 1.2, col = "gray", xpd = NA)
   
   
   ## ---- Panel 2: vertical histogram ----
@@ -74,7 +101,7 @@ draw_flag_fig <- function(variable) {
   
   plot(NA, xlim = c(0, max(h$density)), ylim = c(lo, hi),
        xlab = "Density", 
-       ylab = "Tonnes of carbon dioxide per year",
+       ylab = var_units,
        las = 1, xaxs = "i", yaxs = "i", frame.plot = F, 
        cex.axis = 1.2, cex.lab = 1.5)
   
@@ -89,10 +116,11 @@ draw_flag_fig <- function(variable) {
 
 
 
-
-
-
-
+draw_flag_fig("emissions_per_capita")
+draw_flag_fig("emissions")
+draw_flag_fig("avg_residence_area")
+draw_flag_fig("avg_ef")
+draw_flag_fig("avg_consumption")
 
 
 
