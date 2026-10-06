@@ -115,7 +115,7 @@ draw_flag_fig <- function(variable) {
 }
 
 
-
+# Drawing flag figs
 draw_flag_fig("emissions_per_capita")
 draw_flag_fig("emissions")
 draw_flag_fig("avg_residence_area")
@@ -124,46 +124,101 @@ draw_flag_fig("avg_consumption")
 
 
 
+# Hot spot maps
 
-par(mar = c(0, 0, 0, 3))
-plot(gemeinde, col = gcols, box = F, lwd = 0.05, axes = F)
+draw_hotspot_maps <- function(variable, high_bar, low_bar) {
+  
+  x <- gemeinde[[variable]]
+  high_bar <- round(high_bar, 2)
+  low_bar <- round(low_bar, 2)
+  
+  # Labels
+  if (variable == "emissions_per_capita") {
+    var_label <- "Average carbon dioxide emissions per person"
+    var_high   <- paste0("> ", high_bar, " tonnes")
+    var_low    <- paste0("< ", low_bar, " tonnes")
+  } 
+  
+  if (variable == "emissions") {
+    x <- x / 1e3
+    high_bar <- round(high_bar / 1e3, 2)
+    low_bar <- round(low_bar / 1e3, 2)
+    
+    var_label <- "Carbon dioxide emissions"
+    var_units <- " thousand tonnes"
+    var_high   <- paste0("> ", high_bar, var_units)
+    var_low    <- paste0("< ", low_bar, var_units)
+  } 
+  
+  if (variable == "avg_residence_area") {
+    var_label <- "Average residence area"
+    var_units <- " square meters"
+    var_high   <- paste0("> ", high_bar, var_units)
+    var_low    <- paste0("< ", low_bar, var_units)
+    
+  } 
+  
+  if (variable == "avg_ef") {
+    var_label <- "Average emission factor"
+    var_units <- " kg of carbon dioxide per kWh"
+    var_high   <- paste0("> ", high_bar, var_units)
+    var_low    <- paste0("< ", low_bar, var_units)
+  } 
+  
+  if (variable == "avg_consumption") {
+    var_label <- "Average heat consumption rate"
+    var_units <- " kWh per square meter"
+    var_high   <- paste0("> ", high_bar, var_units)
+    var_low    <- paste0("< ", low_bar, var_units)
+  } 
+  
+  file_name <- here(paste0("maps/", variable, "_hotspots.png")) 
+  
+  png(file_name, width = 12, height = 9, units = "in",  res = 300)
+  
+  layout(matrix(1:2, nrow = 1), widths = c(1, 1))
+  
+  ## ---- Panel 1: map ----
+  gcols <- ifelse(x >= high_bar, "darkred", "white")
+  
+  plot(gemeinde, col = gcols, box = FALSE, lwd = 0.025, axes = FALSE,
+       mar = c(0, 0, 3, 0))
+  
+  text(x = e$xmax * 1.01, y = e$ymax * 1.012,
+       labels = var_label, cex = 1.5, col = "black", xpd = NA, font = 2)
+  
+  x_mid_point <- (e$xmin + (e$xmax - e$xmin)/2)
+  text(x = x_mid_point, y = e$ymax * 1.004,
+       labels = var_high, cex = 1.25, col = "black", xpd = NA, font = 1)
+  
+  
+  ## ---- Panel 2: vertical histogram ----
+  threshold <- 2
+  gcols <- ifelse(x < low_bar, "turquoise4", "white")
+  
+  plot(gemeinde, col = gcols, box = FALSE, lwd = 0.025, axes = FALSE,
+       mar = c(0, 0, 3, 0))
+  
+  text(x = x_mid_point, y = e$ymax * 1.004,
+       labels = var_low, cex = 1.3, col = "black", xpd = NA, font = 1)
+  
+  
+  dev.off()
+  
+}
 
-threshold <- quantile(gemeinde$emissions_per_capita, 0.9, na.rm = T)
-gcols <- ifelse(gemeinde$emissions_per_capita > threshold, "darkred", "white")
-plot(gemeinde, col = gcols, box = F, lwd = 0.05, axes = F)
+draw_hotspot_maps("emissions_per_capita", 2, 0.5)
 
+draw_hotspot_maps("emissions", 
+                  quantile(gemeinde$emissions, 0.95, na.rm = T), 
+                  quantile(gemeinde$emissions, 0.05, na.rm = T))
 
-threshold <- 2
-gcols <- ifelse(gemeinde$emissions_per_capita > threshold, "darkred", "white")
-plot(gemeinde, col = gcols, box = F, lwd = 0.05, axes = F)
+draw_hotspot_maps("avg_ef", 
+                  quantile(gemeinde$avg_ef, 0.95, na.rm = T), 
+                  quantile(gemeinde$avg_ef, 0.05, na.rm = T))
 
+draw_hotspot_maps("avg_consumption", 
+                  quantile(gemeinde$avg_consumption, 0.95, na.rm = T), 
+                  quantile(gemeinde$avg_consumption, 0.05, na.rm = T))
 
-
-threshold <- 1
-gcols <- ifelse(gemeinde$emissions_per_capita < threshold, "turquoise4", "white")
-plot(gemeinde, col = gcols, box = F, lwd = 0.05, axes = F)
-
-
-
-threshold <- quantile(gemeinde$emissions_per_capita, 0.01, na.rm = T)
-gcols <- ifelse(gemeinde$emissions_per_capita < threshold, "turquoise4", "white")
-plot(gemeinde, col = gcols, box = F, lwd = 0.05, axes = F)
-text(8, 49,  "1 % of municipalities with lowest emissions per capita")
-
-
-png(here("maps/emissions_per_capita.png"), width = 9, height = 9, units = "in", 
-    res = 300) #, bg = NA)
-
-gcols <- get_gcols(gemeinde$emissions_per_capita)
-
-par(mar = c(0, 0, 0, 3))
-plot(gemeinde, col = gcols, box = F, lwd = 0.05, axes = F)
-add_legend(8e5, 5595000, 
-       legend = c("Top",
-                  "Middle",
-                  "Bottom ",
-                  "Missing data"), 
-       pch = 15, pt.cex = 1.5, cex = 0.6, bty = "n", y.intersp = 1.6,
-       col = c("black", "#DD0000", "#FFCC00", "lightgray"), xpd = T)
-dev.off()
 
