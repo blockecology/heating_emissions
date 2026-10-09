@@ -5,6 +5,9 @@ source(here("scripts/utils.R"))
 
 DATA_PATH <- here("data/census_tables/")
 
+# We use tabular data from 2022 German census downloaded from:
+# https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Zensus2022/_inhalt.html#1418260
+
 read_census_table <- function(file_name, s) {
   x <- read_xlsx(paste0(DATA_PATH, file_name), 
                           sheet = s, na = c("", "–", "."))
@@ -25,7 +28,7 @@ avg_consumption <- numeric(nrow(buildings))
 for (i in 1:nrow(buildings)) {
   weights <- as.numeric(buildings[i, grep("BAUJAHR", names(buildings))])
   weights <- ifelse(is.na(weights), 0, weights)
-  avg_consumption[i] <- weighted.mean(energy_consumption$consumption, weights,
+  avg_consumption[i] <- weighted.mean(HEAT_CONSUMPTION$consumption, weights,
                                       na.rm = TRUE)
   
 }
@@ -36,7 +39,7 @@ avg_ef <- numeric(nrow(buildings))
 for (i in 1:nrow(buildings)) {
   weights <- as.numeric(buildings[i, grep("NERGIETRAEGER", names(buildings))])
   weights <- ifelse(is.na(weights), 0, weights)
-  avg_ef[i] <- weighted.mean(emission_factors$ef, weights, na.rm = F)
+  avg_ef[i] <- weighted.mean(EMISSION_FACTORS_LIFE_CYCLE$ef, weights, na.rm = F)
   
 }
 
@@ -67,16 +70,4 @@ gemi <- cbind(population[, 2:3],
               emissions)
 
 write.csv(gemi, here("processed_data/gem_emissions.csv"), row.names = FALSE)
-
-
-# correlates
-rent_per_m2 <- as.numeric(buildings$QMMIETE)
-owners <- as.numeric(buildings$ETQ)
-vacants <- as.numeric(buildings$LEQ)
-vacants[is.na(vacants)] <- 0
-occupancy <- 1 - vacants/100
-
-seniors <- (demography$Alter_infr__10 + demography$Alter_infr__11) / inhabitats
-seniors <- seniors * 100 # convert from fraction to percentage
-
 
